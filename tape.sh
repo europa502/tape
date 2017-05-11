@@ -17,35 +17,40 @@ echo ''
                       
 avgsiglev=0
 iface=$1
-network=`iwconfig $iface`
-network=${network##*ESSID:}
-network=${network%Mode*}
-echo 'Connected to' $network
-echo ''
-echo 'signal level	power	  frequency	distance from router ' 
-while true 
-do 
-for i in `seq 1000`
-do
-config=`iwconfig $iface`
-siglev=${config##*level=}
-siglev=${siglev%dBm*} # signal level
+if [ -z "$iface" ] ; then
+ echo "Multiple interfaces found! Please provide a single wireless interface. "
+else if [ "$iface" = ' -h ' ] || [ "$iface" = " --help " ] ; then
+ echo "Usage - sh tape.sh [wireless interface] " 
+else    
+ network=`iwconfig $iface`
+ network=${network##*ESSID:}
+ network=${network%Mode*}
+ echo 'Connected to' $network
+ echo ''
+ echo 'signal level	power	  frequency	distance from router ' 
+ while true 
+ do 
+ for i in `seq 1000`
+ do
+  config=`iwconfig $iface`
+  siglev=${config##*level=}
+  siglev=${siglev%dBm*} # signal level
 
-avgsiglev=`echo $(($avgsiglev+$siglev))` 
-done
-avgsiglev=`echo $(($avgsiglev/1000))`
+  avgsiglev=`echo $(($avgsiglev+$siglev))` 
+ done
+ avgsiglev=`echo $(($avgsiglev/1000))`
 
 
-freq=${config##*Frequency:}
-freq=${freq%GHz*} 
-freq=`python -c "print $freq*1000"`
+ freq=${config##*Frequency:}
+ freq=${freq%GHz*} 
+ freq=`python -c "print $freq*1000"`
 
  
-power=${config##*Tx-Power=}
-power=${power%dBm*}
-power=${power%dBm*}  # transmitter power
+ power=${config##*Tx-Power=}
+ power=${power%dBm*}
+ power=${power%dBm*}  # transmitter power
 
-python log.py $avgsiglev $freq $power
+ python log.py $avgsiglev $freq $power
 
-done
-
+ done
+fi;fi
